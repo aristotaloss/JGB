@@ -1,6 +1,10 @@
 package nl.bartpelle.jgb;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.util.zip.CRC32;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import nl.bartpelle.jgb.enums.CGBCompatibility;
 import nl.bartpelle.jgb.ex.InvalidCartridgeException;
@@ -18,6 +22,28 @@ public class GameCartridge {
 	public int romVersion;
 	
 	public GameCartridge(byte[] data) throws InvalidCartridgeException {
+		// See if this is zipped data
+		try (ZipInputStream zin = new ZipInputStream(new ByteArrayInputStream(data))) {
+			ZipEntry entry;
+			while ((entry = zin.getNextEntry()) != null) {
+				if (entry.isDirectory() || entry.getName().endsWith(".txt") || entry.getName().endsWith(".nfo"))
+					continue; // We don't need to load text/info files =P
+				
+				ByteArrayOutputStream baos = new ByteArrayOutputStream();
+				byte[] buffer = new byte[8196];
+				int read;
+				
+				while ((read = zin.read(buffer)) > 0) {
+					baos.write(buffer, 0, read);
+				}
+				
+				baos.close();
+				data = baos.toByteArray();
+			}
+		} catch (Exception e) {
+			// Apparently it is not.
+		}
+		
 		// Read start address
 		startAddress = (data[0x102] & 0xFF) | (data[0x103] << 8);
 		if (startAddress < 0 || startAddress >= data.length) {
