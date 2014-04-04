@@ -53,5 +53,45 @@ public class GBZ80 {
 	 */
 	private byte L;
 	
+	/**
+	 * The currently used ROM bank. A value of 0 or 1 indicates bank 1, values 2 to 7 indicate bank 2 to 7.
+	 */
+	private byte romBank;
+	
+	/**
+	 * The actual game ROM bytes that contain the instructions.
+	 */
+	private byte[] rom;
+	
+	/**
+	 * The cartridge that is currently running.
+	 */
+	private GameCartridge cartridge;
+	
+	/**
+	 * The 'program counter', which resembles the offset on the ROM where we will execute our instruction.
+	 */
+	private int pc;
+	
+	/**
+	 * Create a new Z80 processor emulator from the specified {@link GameCartridge}.
+	 * @param cartridge the cartridge which contains the game ROM and various other information.
+	 */
+	public GBZ80(GameCartridge cartridge) {
+		this.cartridge = cartridge;
+		rom = cartridge.rom;
+	}
+	
+	/**
+	 * Process a specified amount of instructions to let the processor interpret.
+	 * @param amount the number of instructions to execute, or <code>-1</code> to run indefinitely.
+	 */
+	public void processInstructions(int amount) {
+		int instr = -1;
+		
+		while (++instr != amount) {
+			// And so... it begins.
+		}
+	}
 	
 }

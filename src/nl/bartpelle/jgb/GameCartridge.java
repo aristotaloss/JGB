@@ -13,6 +13,7 @@ public class GameCartridge {
 	
 	private static final long NINTENDO_GRAPHIC_CRC32 = 0x46195417L;
 	
+	public byte[] rom;
 	public int startAddress;
 	public String title;
 	public String makerCode;
@@ -43,6 +44,8 @@ public class GameCartridge {
 		} catch (Exception e) {
 			// Apparently it is not.
 		}
+		
+		rom = data;
 		
 		// Read start address
 		startAddress = (data[0x102] & 0xFF) | (data[0x103] << 8);
