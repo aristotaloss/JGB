@@ -64,6 +64,11 @@ public class GBZ80 {
 	private byte[] rom;
 	
 	/**
+	 * The stack of the processor. Consists of 65535 bytes.
+	 */
+	private byte[] stack = new byte[0xFFFF];
+	
+	/**
 	 * The cartridge that is currently running.
 	 */
 	private GameCartridge cartridge;
@@ -74,12 +79,19 @@ public class GBZ80 {
 	private int pc;
 	
 	/**
+	 * The 'stack pointer', which resembles the position in the stack. Initially set to the top of the stack.
+	 * Decreases when something is pushed and increases when something is popped.
+	 */
+	private int sp = 0xFFFE;
+	
+	/**
 	 * Create a new Z80 processor emulator from the specified {@link GameCartridge}.
 	 * @param cartridge the cartridge which contains the game ROM and various other information.
 	 */
 	public GBZ80(GameCartridge cartridge) {
 		this.cartridge = cartridge;
 		rom = cartridge.rom;
+		pc = cartridge.startAddress;
 	}
 	
 	/**
@@ -88,9 +100,53 @@ public class GBZ80 {
 	 */
 	public void processInstructions(int amount) {
 		int instr = -1;
+		int cycles; // Amount of consumed cycles (afaik this is used internally somewhere)
+		int opcode;
 		
 		while (++instr != amount) {
 			// And so... it begins.
+			opcode = rom[pc] & 0xFF;
+			
+			switch (opcode) {
+			case Instructions.LD_A_A:
+				// A <- A obviously does nothing
+				cycles = 1;
+				pc++;
+				break;
+			case Instructions.LD_B_A:
+				B = A;
+				cycles = 1;
+				pc++;
+				break;
+			case Instructions.LD_C_A:
+				C = A;
+				cycles = 1;
+				pc++;
+				break;
+			case Instructions.LD_D_A:
+				D = A;
+				cycles = 1;
+				pc++;
+				break;
+			case Instructions.LD_E_A:
+				E = A;
+				cycles = 1;
+				pc++;
+				break;
+			case Instructions.LD_H_A:
+				H = A;
+				cycles = 1;
+				pc++;
+				break;
+			case Instructions.LD_L_A:
+				L = A;
+				cycles = 1;
+				pc++;
+				break;
+			default:
+				System.err.println("Unknown Z80 instruction: $" + Integer.toHexString(opcode).toUpperCase() + ".");
+				return;
+			}
 		}
 	}
 	
