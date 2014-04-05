@@ -14,44 +14,14 @@ public class GBZ80 {
 	 */
 	
 	/**
-	 * Accumulator register, mainly used for results from arithmetic/logical operations.
-	 */
-	private byte A;
-	
-	/**
-	 * Auxiliary register, high byte of combined 16-bit register 'BC'.
-	 */
-	private byte B;
-	
-	/**
-	 * Auxiliary register, low byte of combined 16-bit register 'BC'.
-	 */
-	private byte C;
-	
-	/**
-	 * Auxiliary register, high byte of combined 16-bit register 'DE'.
-	 */
-	private byte D;
-	
-	/**
-	 * Auxiliary register, low byte of combined 16-bit register 'DE'.
-	 */
-	private byte E;
-	
-	/**
 	 * Flags register, holds flags for arithmetic and logical operations (e.g. carry).
 	 */
 	private byte F;
 	
 	/**
-	 * Auxiliary register mostly used in address storing. High byte of combined 16-bit register 'HL'.
+	 * The CPU's registers. Represent the values in {@link Register}.
 	 */
-	private byte H;
-	
-	/**
-	 * Auxiliary register mostly used in address storing. Low byte of combined 16-bit register 'HL'.
-	 */
-	private byte L;
+	private int[] registers = new int[8];
 	
 	/**
 	 * The currently used ROM bank. A value of 0 or 1 indicates bank 1, values 2 to 7 indicate bank 2 to 7.
@@ -99,55 +69,41 @@ public class GBZ80 {
 	 * @param amount the number of instructions to execute, or <code>-1</code> to run indefinitely.
 	 */
 	public void processInstructions(int amount) {
-		int instr = -1;
-		int cycles; // Amount of consumed cycles (afaik this is used internally somewhere)
+		int instr = 0;
+		int cycles = 0; // Amount of consumed cycles (afaik this is used internally somewhere)
 		int opcode;
 		
-		while (++instr != amount) {
-			// And so... it begins.
+		while (instr++ != amount) {
 			opcode = rom[pc] & 0xFF;
 			
-			switch (opcode) {
-			case Instructions.LD_A_A:
-				// A <- A obviously does nothing
+			if ((opcode & 0xC0) == Instructions.LD_R_R) {
+				int dst = (opcode >> 3) & 7;
+				int src = opcode & 7;
+				registers[dst] = registers[src];
 				cycles = 1;
 				pc++;
-				break;
-			case Instructions.LD_B_A:
-				B = A;
-				cycles = 1;
-				pc++;
-				break;
-			case Instructions.LD_C_A:
-				C = A;
-				cycles = 1;
-				pc++;
-				break;
-			case Instructions.LD_D_A:
-				D = A;
-				cycles = 1;
-				pc++;
-				break;
-			case Instructions.LD_E_A:
-				E = A;
-				cycles = 1;
-				pc++;
-				break;
-			case Instructions.LD_H_A:
-				H = A;
-				cycles = 1;
-				pc++;
-				break;
-			case Instructions.LD_L_A:
-				L = A;
-				cycles = 1;
-				pc++;
-				break;
-			default:
+			} else if (((opcode & 0xF8) == Instructions.CP_R) || opcode == Instructions.CP_N) {
+				if (opcode == Instructions.CP_N) {
+					pc++;
+					int operand = rom[pc++];
+					int a = registers[Register.A];
+					setFlag(Flag.N, true);
+					setFlag(Flag.Z, a == operand);
+					setFlag(Flag.CY, a < operand);
+					setFlag(Flag.H, (a & 0xF) < (operand & 0xF));
+				}
+			} else {
 				System.err.println("Unknown Z80 instruction: $" + Integer.toHexString(opcode).toUpperCase() + ".");
-				return;
+				break;
 			}
 		}
+	}
+	
+	private void setFlag(int flag, boolean set) {
+		if (set)
+			F |= flag;
+		else
+			F &= ~flag;
 	}
 	
 }
